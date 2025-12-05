@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Email Generator</h1>
+        </header>
+
+        <main>
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="section-header">
+                    <label for="email-input">Paste Email</label>
+                    <div class="action-icons">
+                        <button class="icon-btn" id="clear-btn" title="Clear">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                        <button class="icon-btn" id="copy-input-btn" title="Copy Input">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <textarea id="email-input" placeholder="Paste your email here..."></textarea>
+            </section>
+
+            <!-- Action Buttons -->
+            <section class="actions-section">
+                <button class="action-btn" data-action="proofread" data-key="1">
+                    <span class="key-hint">1</span>
+                    <span class="btn-label">Proofread</span>
+                </button>
+                <button class="action-btn" data-action="translate" data-key="2">
+                    <span class="key-hint">2</span>
+                    <span class="btn-label">Translate</span>
+                </button>
+                <button class="action-btn" data-action="table-format" data-key="3">
+                    <span class="key-hint">3</span>
+                    <span class="btn-label">Table Format</span>
+                </button>
+                <button class="action-btn" data-action="proofread-pt" data-key="4">
+                    <span class="key-hint">4</span>
+                    <span class="btn-label">Proofread (PT)</span>
+                </button>
+                <button class="action-btn" data-action="summarize" data-key="5">
+                    <span class="key-hint">5</span>
+                    <span class="btn-label">Summarize</span>
+                </button>
+            </section>
+
+            <!-- Output Section -->
+            <section class="output-section">
+                <div class="section-header">
+                    <label for="email-output">Final Email</label>
+                    <div class="action-icons">
+                        <button class="icon-btn" id="copy-output-btn" title="Copy Output">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <textarea id="email-output" placeholder="Processed email will appear here..." readonly></textarea>
+            </section>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loading">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
