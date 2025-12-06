@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Generator - Powered by Claude</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            color: #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 500px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .output-area {
+            min-height: 300px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            color: #e2e8f0;
+            font-family: inherit;
+        }
+
+        .output-placeholder {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Email Generator</h1>
+            <p class="subtitle">Generate professional emails powered by Claude AI</p>
+        </header>
+
+        <div class="main-content">
+            <div class="card">
+                <h2 class="card-title">Email Parameters</h2>
+                <form id="emailForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email_type">Email Type</label>
+                            <select id="email_type" name="email_type">
+                                <option value="General">General</option>
+                                <option value="Follow-up">Follow-up</option>
+                                <option value="Introduction">Introduction</option>
+                                <option value="Thank You">Thank You</option>
+                                <option value="Apology">Apology</option>
+                                <option value="Request">Request</option>
+                                <option value="Announcement">Announcement</option>
+                                <option value="Invitation">Invitation</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="tone">Tone</label>
+                            <select id="tone" name="tone">
+                                <option value="Professional">Professional</option>
+                                <option value="Friendly">Friendly</option>
+                                <option value="Formal">Formal</option>
+                                <option value="Casual">Casual</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="Persuasive">Persuasive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="recipient">Recipient Name *</label>
+                        <input type="text" id="recipient" name="recipient" placeholder="e.g., John Smith" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Email Subject *</label>
+                        <input type="text" id="subject" name="subject" placeholder="e.g., Meeting Follow-up" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="key_points">Key Points to Include *</label>
+                        <textarea id="key_points" name="key_points" placeholder="Enter the main points you want to cover in the email..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="additional_context">Additional Context (Optional)</label>
+                        <textarea id="additional_context" name="additional_context" placeholder="Any additional context or specific requirements..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="generateBtn">
+                        Generate Email
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Generated Email</h2>
+                <div id="errorContainer"></div>
+                <div class="output-area" id="output">
+                    <span class="output-placeholder">Your generated email will appear here...</span>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" id="copyBtn" disabled>Copy to Clipboard</button>
+                    <button class="btn btn-secondary" id="clearBtn">Clear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('emailForm');
+        const output = document.getElementById('output');
+        const generateBtn = document.getElementById('generateBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const errorContainer = document.getElementById('errorContainer');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            errorContainer.innerHTML = '';
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="loading"></span>Generating...';
+            output.innerHTML = '<span class="output-placeholder">Generating your email...</span>';
+
+            const formData = {
+                email_type: document.getElementById('email_type').value,
+                tone: document.getElementById('tone').value,
+                recipient: document.getElementById('recipient').value,
+                subject: document.getElementById('subject').value,
+                key_points: document.getElementById('key_points').value,
+                additional_context: document.getElementById('additional_context').value
+            };
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to generate email');
+                }
+
+                output.textContent = data.email;
+                copyBtn.disabled = false;
+
+            } catch (error) {
+                errorContainer.innerHTML = `<div class="error">${error.message}</div>`;
+                output.innerHTML = '<span class="output-placeholder">Your generated email will appear here...</span>';
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate Email';
+            }
+        });
+
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(output.textContent);
+                showToast('Copied to clipboard!');
+            } catch (err) {
+                showToast('Failed to copy');
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            output.innerHTML = '<span class="output-placeholder">Your generated email will appear here...</span>';
+            copyBtn.disabled = true;
+            errorContainer.innerHTML = '';
+        });
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'success-toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
