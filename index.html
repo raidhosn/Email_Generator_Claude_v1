@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Email Generator</h1>
+            <p class="subtitle">Generate professional emails with ease</p>
+        </header>
+
+        <main>
+            <form id="emailForm">
+                <div class="form-group">
+                    <label for="emailType">Email Type</label>
+                    <select id="emailType" required>
+                        <option value="">Select email type...</option>
+                        <option value="professional">Professional/Business</option>
+                        <option value="follow-up">Follow-up</option>
+                        <option value="thank-you">Thank You</option>
+                        <option value="introduction">Introduction</option>
+                        <option value="apology">Apology</option>
+                        <option value="request">Request</option>
+                        <option value="invitation">Invitation</option>
+                        <option value="complaint">Complaint</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="tone">Tone</label>
+                    <select id="tone" required>
+                        <option value="">Select tone...</option>
+                        <option value="formal">Formal</option>
+                        <option value="semi-formal">Semi-formal</option>
+                        <option value="friendly">Friendly</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="apologetic">Apologetic</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="recipient">Recipient Name</label>
+                    <input type="text" id="recipient" placeholder="e.g., John Smith" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="senderName">Your Name</label>
+                    <input type="text" id="senderName" placeholder="e.g., Jane Doe" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Email Subject</label>
+                    <input type="text" id="subject" placeholder="e.g., Meeting Request" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="keyPoints">Key Points to Include</label>
+                    <textarea id="keyPoints" rows="4" placeholder="Enter the main points you want to cover in your email..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="additionalContext">Additional Context (Optional)</label>
+                    <textarea id="additionalContext" rows="2" placeholder="Any additional information or context..."></textarea>
+                </div>
+
+                <button type="submit" id="generateBtn">Generate Email</button>
+            </form>
+
+            <div id="outputSection" class="output-section hidden">
+                <h2>Generated Email</h2>
+                <div class="output-controls">
+                    <button id="copyBtn" class="btn-secondary">Copy to Clipboard</button>
+                    <button id="regenerateBtn" class="btn-secondary">Regenerate</button>
+                </div>
+                <div id="emailOutput" class="email-output"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Email Generator v1.0</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
