@@ -62,19 +62,33 @@ const ACTIONS: Action[] = [
     labelTop: "EN",
     labelBottom: "Proofread",
     description: "Improve English grammar, clarity, and professional tone.",
-    promptTemplate: (input, ctx) =>
-      [
-        "You are a Microsoft Support Engineer writing customer-ready emails.",
-        "Task. Proofread and rewrite the email in English.",
-        "Requirements.",
-        `- Tone. ${ctx.tone}.`,
-        "- Keep the original intent.",
-        "- Use short paragraphs.",
-        "- Avoid jargon unless present in the source.",
-        "- Do not invent facts. If something is unknown, keep it as a placeholder in brackets.",
-        "Input:",
-        input,
-      ].join("\n"),
+    promptTemplate: (input) =>
+      `Act as a perfectionist, meticulous proofreader and senior editor with mastery of English. Clarify complex ideas without changing the author's intended meaning, facts, or voice.
+
+Input (draft text will be inside these XML tags):
+<input>
+${input}
+</input>
+
+Non-negotiable rules:
+1. Preserve meaning, intent, and voice. Do not add new claims, facts, examples, or opinions.
+2. Default to American English unless the draft consistently uses another variety. If so, keep that variety.
+3. Keep all placeholders unchanged, for example [TK], [TBD], {{variable}}, <PLACEHOLDER>.
+4. Keep all quotations and citations exactly as written. Do not alter quoted text.
+5. If the draft contains code, commands, identifiers, or configurations, do not change their semantics. Only adjust surrounding prose and formatting if it is safe.
+6. Maintain the existing structure and formatting (headings, bullets, tables). Only restructure when it clearly improves readability without changing meaning.
+7. Improve clarity, flow, grammar, punctuation, consistency, and concision. Remove redundancy and filler. Resolve ambiguity where possible without inventing missing details.
+8. Standardize style consistently (capitalization, hyphenation, numbering, list punctuation, heading case). Replace em dashes with a comma or a period where appropriate, unless they are required for technical correctness.
+
+Unsupported or dubious content:
+If a statement appears potentially unsupported, do not rewrite it into a new claim. Keep it as is and soften only if you can do so without changing meaning (otherwise leave unchanged).
+
+Output requirement (critical):
+- Return ONLY the fully revised, publication-ready draft text.
+- Do NOT include any other sections, labels, headings, commentary, bullet lists of errors, explanations, or preambles.
+- Do NOT output "Summary," "Mistakes," "Notes," or "Revised Draft." Just the revised draft itself.
+- If no edits are needed, return the original draft unchanged.
+- Return only the clean, edited text ready for publication.`,
   },
   {
     id: "pt_proofread",
