@@ -241,7 +241,7 @@ function toSimpleHtml(text: string) {
 
   return escaped
     .split(/\n{2,}/)
-    .map((p) => `<p style="margin:0 0 12px 0;">${p.replaceAll("\n", "<br/>")}</p>`)
+    .map((p: string) => `<p style="margin:0 0 12px 0;">${p.replaceAll("\n", "<br/>")}</p>`)
     .join("");
 }
 
