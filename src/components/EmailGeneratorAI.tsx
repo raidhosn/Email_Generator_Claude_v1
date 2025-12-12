@@ -193,8 +193,42 @@ async function callYourLLM(prompt: string) {
   // const data = await res.json();
   // return data.output;
 
-  // Demo behavior only:
-  return "[Demo output]\n\n" + prompt;
+  // Claude API integration
+  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error('VITE_ANTHROPIC_API_KEY not found in environment');
+    return '[Error] API key not configured';
+  }
+
+  try {
+    console.log('Calling Claude API...');
+    const response = await fetch('/api/anthropic/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error:', response.status, errorText);
+      return `[Error ${response.status}] ${errorText}`;
+    }
+
+    const data = await response.json();
+    console.log('API Response:', data);
+    return data.content[0].text;
+  } catch (error) {
+    console.error('Fetch error:', error);
+    return `[Error] ${error}`;
+  }
 }
 
 function toSimpleHtml(text: string) {
