@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 /**
  * Email Generator AI (Front-end MVP)
@@ -27,8 +27,10 @@ type Action = {
   labelBottom: string;
   emoji?: string;
   description: string;
-  // promptTemplate should be sent to your LLM along with the email draft and any extracted context
-  promptTemplate: (input: string, ctx: GeneratorContext) => string;
+  // systemPrompt is sent as the system message (not shown to user in output)
+  systemPrompt: string;
+  // userPromptTemplate generates the user message from input
+  userPromptTemplate: (input: string, ctx: GeneratorContext) => string;
 };
 
 type GeneratorContext = {
@@ -45,153 +47,124 @@ const ACTIONS: Action[] = [
     labelTop: "Table",
     labelBottom: "Format",
     description: "Convert pasted data into a clean, readable table format.",
-    promptTemplate: (input) =>
-      [
-        "You are a formatting assistant.",
-        "Task. Convert any tabular data in the email into a clean table.",
-        "Rules.",
-        "- Preserve meaning and values.",
-        "- Use a simple markdown table with clear headers.",
-        "- If no table-like content exists, return the original text unchanged.",
-        "Input:",
-        input,
-      ].join("\n"),
+    systemPrompt: `You are a formatting assistant.
+Task: Convert any tabular data in the email into a clean table.
+Rules:
+- Preserve meaning and values.
+- Use a simple markdown table with clear headers.
+- If no table-like content exists, return the original text unchanged.
+- Return ONLY the formatted result, no explanations or commentary.`,
+    userPromptTemplate: (input) => `<input>\n${input}\n</input>`,
   },
   {
     id: "en_proofread",
     labelTop: "EN",
     labelBottom: "Proofread",
     description: "Improve English grammar, clarity, and professional tone.",
-    promptTemplate: (input) =>
-      `Act as a perfectionist, meticulous proofreader and senior editor with mastery of English. Clarify complex ideas without changing the author's intended meaning, facts, or voice.
-
-Input (draft text will be inside these XML tags):
-<input>
-${input}
-</input>
+    systemPrompt: `Act as a perfectionist, meticulous proofreader and senior editor with mastery of English. Clarify complex ideas without changing the author's intended meaning, facts, or voice.
 
 Non-negotiable rules:
 1. Preserve meaning, intent, and voice. Do not add new claims, facts, examples, or opinions.
-2. Default to American English unless the draft consistently uses another variety. If so, keep that variety.
-3. Keep all placeholders unchanged, for example [TK], [TBD], {{variable}}, <PLACEHOLDER>.
-4. Keep all quotations and citations exactly as written. Do not alter quoted text.
-5. If the draft contains code, commands, identifiers, or configurations, do not change their semantics. Only adjust surrounding prose and formatting if it is safe.
-6. Maintain the existing structure and formatting (headings, bullets, tables). Only restructure when it clearly improves readability without changing meaning.
-7. Improve clarity, flow, grammar, punctuation, consistency, and concision. Remove redundancy and filler. Resolve ambiguity where possible without inventing missing details.
-8. Standardize style consistently (capitalization, hyphenation, numbering, list punctuation, heading case). Replace em dashes with a comma or a period where appropriate, unless they are required for technical correctness.
-
-Unsupported or dubious content:
-If a statement appears potentially unsupported, do not rewrite it into a new claim. Keep it as is and soften only if you can do so without changing meaning (otherwise leave unchanged).
+2. Default to American English unless the draft consistently uses another variety.
+3. Keep all placeholders unchanged: [TK], [TBD], {{variable}}, <PLACEHOLDER>.
+4. Keep all quotations and citations exactly as written.
+5. If the draft contains code, commands, or configurations, do not change their semantics.
+6. Maintain existing structure and formatting (headings, bullets, tables).
+7. Improve clarity, flow, grammar, punctuation, consistency, and concision. Remove redundancy and filler.
+8. Standardize style consistently (capitalization, hyphenation, numbering, list punctuation).
 
 Output requirement (critical):
-- Return ONLY the fully revised, publication-ready draft text.
-- Do NOT include any other sections, labels, headings, commentary, bullet lists of errors, explanations, or preambles.
-- Do NOT output "Summary," "Mistakes," "Notes," or "Revised Draft." Just the revised draft itself.
-- If no edits are needed, return the original draft unchanged.
-- Return only the clean, edited text ready for publication.`,
+Return ONLY the fully revised, publication-ready text.
+Do NOT include commentary, explanations, labels, or preambles.
+If no edits are needed, return the original unchanged.`,
+    userPromptTemplate: (input) => `<input>\n${input}\n</input>`,
   },
   {
     id: "pt_proofread",
     labelTop: "PT",
     labelBottom: "Proofread",
     description: "Improve Brazilian Portuguese grammar, clarity, and professional tone.",
-    promptTemplate: (input, ctx) =>
-      [
-        "Você é um Engenheiro de Suporte da Microsoft redigindo e-mails prontos para o cliente.",
-        "Tarefa. Revisar e reescrever o e-mail em português do Brasil.",
-        "Requisitos.",
-        `- Tom. ${ctx.tone}.`,
-        "- Manter a intenção original.",
-        "- Usar parágrafos curtos.",
-        "- Não inventar fatos. Se algo for desconhecido, manter como placeholder entre colchetes.",
-        "Entrada:",
-        input,
-      ].join("\n"),
+    systemPrompt: `Você é um Engenheiro de Suporte da Microsoft redigindo e-mails prontos para o cliente.
+Tarefa: Revisar e reescrever o e-mail em português do Brasil.
+Requisitos:
+- Manter a intenção original.
+- Usar parágrafos curtos.
+- Não inventar fatos. Se algo for desconhecido, manter como placeholder entre colchetes.
+- Retorne APENAS o texto revisado, sem comentários ou explicações.`,
+    userPromptTemplate: (input, ctx) => `Tom: ${ctx.tone}\n\n<input>\n${input}\n</input>`,
   },
   {
     id: "en_pt_translate",
     labelTop: "EN ↔ PT",
     labelBottom: "Translator",
     description: "Translate to or from Portuguese, keeping formatting and tone.",
-    promptTemplate: (input, ctx) =>
-      [
-        "You are a bilingual (English + Portuguese Brazil) support communications assistant.",
-        "Task. Translate the email as requested.",
-        "Rules.",
-        "- Preserve meaning and technical terms.",
-        "- Keep paragraph structure.",
-        "- If the input is English, output Portuguese (pt-BR). If the input is Portuguese, output English.",
-        `- Target tone. ${ctx.tone}.`,
-        "Input:",
-        input,
-      ].join("\n"),
+    systemPrompt: `You are a bilingual (English + Portuguese Brazil) support communications assistant.
+Task: Translate the email as requested.
+Rules:
+- Preserve meaning and technical terms.
+- Keep paragraph structure.
+- If the input is English, output Portuguese (pt-BR). If the input is Portuguese, output English.
+- Return ONLY the translated text, no explanations or commentary.`,
+    userPromptTemplate: (input, ctx) => `Target tone: ${ctx.tone}\n\n<input>\n${input}\n</input>`,
   },
   {
     id: "case_title",
     labelTop: "Case",
     labelBottom: "Title",
     description: "Generate an Azure support case title from the email content.",
-    promptTemplate: (input) =>
-      [
-        "You are an Azure Support Engineer.",
-        "Task. Create a concise case title based on the email content.",
-        "Rules.",
-        "- Use the pattern: Request to increase <SKUs> vCPU quotas to <number> cores in the <Region> region | <Region>",
-        "- If key details are missing (SKU, number, region), use placeholders like <SKU>.",
-        "Input:",
-        input,
-      ].join("\n"),
+    systemPrompt: `You are an Azure Support Engineer.
+Task: Create a concise case title based on the email content.
+Rules:
+- Use the pattern: Request to increase <SKUs> vCPU quotas to <number> cores in the <Region> region | <Region>
+- If key details are missing (SKU, number, region), use placeholders like <SKU>.
+- Return ONLY the case title, no explanations or commentary.`,
+    userPromptTemplate: (input) => `<input>\n${input}\n</input>`,
   },
   {
     id: "case_notes",
     labelTop: "Case",
     labelBottom: "Notes",
     description: "Generate CRM-safe case notes in a consistent template.",
-    promptTemplate: (input) =>
-      [
-        "You are an Azure Support Engineer.",
-        "Task. Produce CRM-safe case notes from the email content.",
-        "Format (plain text only).",
-        "Case Update",
-        "Case Notes: <brief case title or topic>",
-        " ",
-        "Actions Taken:",
-        "✅ <one-line action 1>",
-        "✅ <one-line action 2>",
-        " ",
-        "Next Steps:",
-        "🔹 <one-line next step 1>",
-        "🔸 Information needed: <specific item> (if applicable)",
-        "Rules.",
-        "- Each bullet is a single sentence, 12–24 words.",
-        "- No Markdown.",
-        "- Use English only.",
-        "Input:",
-        input,
-      ].join("\n"),
+    systemPrompt: `You are an Azure Support Engineer.
+Task: Produce CRM-safe case notes from the email content.
+Format (plain text only):
+Case Update
+Case Notes: <brief case title or topic>
+
+Actions Taken:
+✅ <one-line action 1>
+✅ <one-line action 2>
+
+Next Steps:
+🔹 <one-line next step 1>
+🔸 Information needed: <specific item> (if applicable)
+
+Rules:
+- Each bullet is a single sentence, 12–24 words.
+- No Markdown.
+- Use English only.
+- Return ONLY the case notes in the format above, no explanations.`,
+    userPromptTemplate: (input) => `<input>\n${input}\n</input>`,
   },
   {
     id: "troubleshooting",
     labelTop: "Trouble",
     labelBottom: "shooting",
     description: "Turn the request into a structured troubleshooting plan.",
-    promptTemplate: (input) =>
-      [
-        "You are an Azure Support Engineer.",
-        "Task. Convert the email into a structured troubleshooting plan.",
-        "Include.",
-        "- Pre-action checklist",
-        "- Initial assessment",
-        "- Data to collect",
-        "- Portal validation steps",
-        "- CLI/PowerShell commands",
-        "- Decision points and next steps",
-        "Constraints.",
-        "- Do not invent customer data.",
-        "- Use placeholders for missing details.",
-        "Input:",
-        input,
-      ].join("\n"),
+    systemPrompt: `You are an Azure Support Engineer.
+Task: Convert the email into a structured troubleshooting plan.
+Include:
+- Pre-action checklist
+- Initial assessment
+- Data to collect
+- Portal validation steps
+- CLI/PowerShell commands
+- Decision points and next steps
+Constraints:
+- Do not invent customer data.
+- Use placeholders for missing details.
+- Return ONLY the troubleshooting plan, no explanations or commentary.`,
+    userPromptTemplate: (input) => `<input>\n${input}\n</input>`,
   },
 ];
 
@@ -201,14 +174,56 @@ function clampText(text: string, max = 50000) {
   return text.slice(0, max) + "\n\n[Truncated for safety. Reduce input length.]";
 }
 
-async function callYourLLM(prompt: string) {
-  // Replace with your backend call. Example structure:
-  // const res = await fetch("/api/generate", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ prompt }) });
-  // const data = await res.json();
-  // return data.output;
+// API configuration - set your API key here or via environment variable
+const ANTHROPIC_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || "";
 
-  // Demo behavior only:
-  return "[Demo output]\n\n" + prompt;
+async function callClaudeAPI(systemPrompt: string, userMessage: string): Promise<string> {
+  if (!ANTHROPIC_API_KEY) {
+    throw new Error(
+      "API key not configured. Set VITE_ANTHROPIC_API_KEY in your .env file."
+    );
+  }
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 4096,
+      system: systemPrompt,
+      messages: [
+        {
+          role: "user",
+          content: userMessage,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.error?.message || `API request failed: ${response.status}`
+    );
+  }
+
+  const data = await response.json();
+
+  // Extract only the assistant's text response
+  const textContent = data.content?.find(
+    (block: { type: string }) => block.type === "text"
+  );
+
+  if (!textContent?.text) {
+    throw new Error("No text response received from API");
+  }
+
+  return textContent.text;
 }
 
 function toSimpleHtml(text: string) {
@@ -221,7 +236,7 @@ function toSimpleHtml(text: string) {
 
   return escaped
     .split(/\n{2,}/)
-    .map((p) => `<p style="margin:0 0 12px 0;">${p.replaceAll("\n", "<br/>")}</p>`)
+    .map((p: string) => `<p style="margin:0 0 12px 0;">${p.replaceAll("\n", "<br/>")}</p>`)
     .join("");
 }
 
@@ -273,10 +288,10 @@ export default function EmailGeneratorAI() {
       }
 
       for (const action of selectedActions) {
-        const prompt = action.promptTemplate(current, ctx);
-        // For real usage, call your LLM or backend here.
-        // You can also pass structured fields (ctx, action.id) to your API.
-        const next = await callYourLLM(prompt);
+        // System prompt contains instructions (not shown in output)
+        // User message contains only the draft text wrapped in XML tags
+        const userMessage = action.userPromptTemplate(current, ctx);
+        const next = await callClaudeAPI(action.systemPrompt, userMessage);
         current = next;
       }
 
